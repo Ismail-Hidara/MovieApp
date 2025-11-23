@@ -43,4 +43,14 @@ public class MovieController {
     public String getMovieDetails(@PathVariable int movieId) {
         return movieService.getMovieDetails(movieId);
     }
+
+    @GetMapping("/filtered")
+    public String getFilteredMovies(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(required = false) String genre,
+            @RequestParam(required = false) String language
+    ) {
+        return movieService.getFilteredMovies(page, genre, language);
+    }
+
 }

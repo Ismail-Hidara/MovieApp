@@ -34,4 +34,25 @@ public class AuthService {
         user.setPassword(passwordEncoder.encode(user.getPassword())); // Encrypt password
         return userRepository.save(user);
     }
+
+    public boolean changePassword(String email, String oldPassword, String newPassword) {
+        Optional<User> optionalUser = userRepository.findByEmail(email);
+        if (optionalUser.isPresent()) {
+            User user = optionalUser.get();
+            if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+                return false;
+            }
+
+            if (newPassword.length() < 6) {
+                throw new IllegalArgumentException("Password must be at least 6 characters");
+            }
+
+            user.setPassword(passwordEncoder.encode(newPassword));
+            userRepository.save(user);
+            return true;
+        }
+        return false;
+    }
+
+
 }

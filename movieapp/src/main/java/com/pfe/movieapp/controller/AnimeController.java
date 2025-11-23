@@ -15,17 +15,22 @@ public class AnimeController {
     }
 
     @GetMapping("/trending")
-    public String getTrendingAnime() {
-        return animeService.getTrendingAnime();
-    }
-
-    @GetMapping("/popular")
-    public String getPopularAnime() {
-        return animeService.getPopularAnime();
+    public String getTrendingAnime(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int perPage,
+            @RequestParam(required = false) String genre,
+            @RequestParam(required = false) String format
+    ) {
+        return animeService.getTrendingAnime(page, perPage, genre, format);
     }
 
     @GetMapping("/{animeId}")
     public String getAnimeDetails(@PathVariable int animeId) {
         return animeService.getAnimeDetails(animeId);
+    }
+
+    @GetMapping("/search")
+    public String searchAnime(@RequestParam String query) {
+        return animeService.searchAnime(query);
     }
 }

@@ -1,52 +1,106 @@
 package com.pfe.movieapp.service;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.http.MediaType;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 public class AnimeService {
 
     private final WebClient webClient;
 
-    @Value("${tmdb.api.key}")
-    private String tmdbApiKey;
-
-    public AnimeService(WebClient.Builder webClientBuilder) {
-        this.webClient = webClientBuilder.baseUrl("https://api.themoviedb.org/3").build();
+    public AnimeService(WebClient.Builder builder) {
+        this.webClient = builder.baseUrl("https://graphql.anilist.co").build();
     }
 
-    // Fetch Trending Anime
-    public String getTrendingAnime() {
-        return webClient.get()
-                .uri(uriBuilder -> uriBuilder.path("/trending/tv/day")
-                        .queryParam("api_key", tmdbApiKey)
-                        .queryParam("with_keywords", "210024") // Anime keyword ID
-                        .build())
+    public String getTrendingAnime(int page, int perPage, String genre, String format) {
+        String query = """
+            query ($page: Int, $perPage: Int, $genre: String, $format: MediaFormat) {
+              Page(page: $page, perPage: $perPage) {
+                media(type: ANIME, genre: $genre, format: $format, sort: TRENDING_DESC) {
+                  id
+                  title { romaji english }
+                  coverImage { large }
+                  genres
+                  format
+                }
+              }
+            }
+        """;
+
+        Map<String, Object> variables = new HashMap<>();
+        variables.put("page", page);
+        variables.put("perPage", perPage);
+        if (genre != null && !genre.isEmpty()) variables.put("genre", genre);
+        if (format != null && !format.isEmpty()) variables.put("format", format);
+
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("query", query);
+        payload.put("variables", variables);
+
+        return webClient.post()
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(payload)
                 .retrieve()
                 .bodyToMono(String.class)
                 .block();
     }
 
-    // Fetch Popular Anime
-    public String getPopularAnime() {
-        return webClient.get()
-                .uri(uriBuilder -> uriBuilder.path("/discover/tv")
-                        .queryParam("api_key", tmdbApiKey)
-                        .queryParam("with_genres", "16") // Animation
-                        .queryParam("with_keywords", "210024") // Anime keyword
-                        .build())
+    public String getAnimeDetails(int id) {
+        String query = """
+            query ($id: Int) {
+              Media(id: $id, type: ANIME) {
+                id
+                title { romaji english }
+                description
+                episodes
+                genres
+                coverImage { large }
+              }
+            }
+        """;
+
+        Map<String, Object> variables = new HashMap<>();
+        variables.put("id", id);
+
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("query", query);
+        payload.put("variables", variables);
+
+        return webClient.post()
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(payload)
                 .retrieve()
                 .bodyToMono(String.class)
                 .block();
     }
 
-    // Fetch Anime Details by ID
-    public String getAnimeDetails(int animeId) {
-        return webClient.get()
-                .uri(uriBuilder -> uriBuilder.path("/tv/{tv_id}")
-                        .queryParam("api_key", tmdbApiKey)
-                        .build(animeId))
+    public String searchAnime(String searchTerm) {
+        String query = """
+            query ($search: String) {
+              Page(perPage: 10) {
+                media(type: ANIME, search: $search) {
+                  id
+                  title { romaji english }
+                  coverImage { large }
+                }
+              }
+            }
+        """;
+
+        Map<String, Object> variables = new HashMap<>();
+        variables.put("search", searchTerm);
+
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("query", query);
+        payload.put("variables", variables);
+
+        return webClient.post()
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(payload)
                 .retrieve()
                 .bodyToMono(String.class)
                 .block();

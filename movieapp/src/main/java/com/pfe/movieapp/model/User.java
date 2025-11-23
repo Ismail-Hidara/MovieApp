@@ -2,6 +2,8 @@ package com.pfe.movieapp.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -20,12 +22,15 @@ public class User {
 
     private String password; // Should be encrypted in production
 
+    // ✅ Re-added favorites support
     @ElementCollection
-    private List<Long> favoriteMovies; // Store movie IDs
+    private List<Long> favoriteMovies = new ArrayList<>();
 
-    @ElementCollection
-    private List<Long> watchlist;
+    // ✅ Watchlist and History already correct
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Watchlist> watchlist = new ArrayList<>();
 
-    @ElementCollection
-    private List<Long> history;
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<History> history = new ArrayList<>();
+
 }

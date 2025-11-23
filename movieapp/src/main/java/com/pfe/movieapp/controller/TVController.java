@@ -33,4 +33,19 @@ public class TVController {
     public String getTVShowDetails(@PathVariable int tvId) {
         return tvService.getTVShowDetails(tvId);
     }
+
+    @GetMapping("/{tvId}/season/{seasonNumber}")
+    public String getSeasonEpisodes(@PathVariable int tvId, @PathVariable int seasonNumber) {
+        return tvService.getSeasonEpisodes(tvId, seasonNumber);
+    }
+
+    @GetMapping("/filtered")
+    public String getFilteredTVShows(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(required = false) String genre,
+            @RequestParam(required = false) String language
+    ) {
+        return tvService.getFilteredTVShows(page, genre, language);
+    }
+
 }

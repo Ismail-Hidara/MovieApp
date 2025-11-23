@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="movieapp-frontend">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/movieapp-frontend.zip!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

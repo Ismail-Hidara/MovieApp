@@ -4,6 +4,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import java.util.Optional;
+
 @Service
 public class MovieService {
 
@@ -82,4 +84,20 @@ public class MovieService {
                 .bodyToMono(String.class)
                 .block();
     }
+
+    public String getFilteredMovies(int page, String genre, String language) {
+        return webClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/discover/movie")
+                        .queryParam("api_key", tmdbApiKey)
+                        .queryParam("page", page)
+                        .queryParam("sort_by", "popularity.desc")
+                        .queryParamIfPresent("with_genres", Optional.ofNullable(genre))
+                        .queryParamIfPresent("with_original_language", Optional.ofNullable(language))
+                        .build())
+                .retrieve()
+                .bodyToMono(String.class)
+                .block();
+    }
+
 }

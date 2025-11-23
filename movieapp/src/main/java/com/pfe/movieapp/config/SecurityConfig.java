@@ -10,6 +10,9 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
 public class SecurityConfig {
@@ -23,16 +26,28 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable()) // Disable CSRF for simplicity
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll() // Allow login & register
-                        .anyRequest().authenticated()
-                )
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+                .csrf(csrf -> csrf.disable())
+                .headers(headers -> headers.frameOptions(frame -> frame.disable())) // 👈 completely disable X-Frame-Options
+                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll()
+                );
 
         return http.build();
     }
+
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.addAllowedOrigin("http://localhost:3000"); // ✅ Allow frontend
+        configuration.addAllowedMethod("*"); // ✅ Allow all HTTP methods (GET, POST, etc.)
+        configuration.addAllowedHeader("*"); // ✅ Allow all headers
+        configuration.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
+
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {

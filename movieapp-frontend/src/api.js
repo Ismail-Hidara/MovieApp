@@ -4,64 +4,29 @@ const API_BASE_URL = "http://localhost:8080/api/"; // Your backend API
 
 const safeApiCall = async (url, isList = true) => {
   try {
-    const token = localStorage.getItem("token"); // Get JWT token from storage
-    const response = await axios.get(url, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {}, // ✅ Include token
-    });
-    return isList ? response.data.results || [] : response.data || {};
+    const response = await axios.get(url);
+    if (isList) {
+      return response.data.results || []; // Return an array for list endpoints
+    } else {
+      return response.data || {}; // Return an object for single-item endpoints
+    }
   } catch (error) {
     console.error(`Error fetching data from ${url}:`, error);
-    return isList ? [] : {};
+    return isList ? [] : {}; // Return an empty array or object based on the endpoint type
   }
 };
 
-export const searchMedia = async (query) => {
-  return safeApiCall(`${API_BASE_URL}search?query=${query}`, true);
+export const searchMedia = async (query, type = "") => {
+  const typeParam = type ? `&type=${type}` : "";
+  try {
+    const response = await axios.get(`${API_BASE_URL}search?query=${query}${typeParam}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error searching media:", error);
+    return { results: [] };
+  }
 };
 
-export const fetchStreamingProviders = async (movieId) => {
-  return safeApiCall(`${API_BASE_URL}streaming/providers/${movieId}`, true);
-};
-
-export const fetchTrailer = async (type, id) => {
-  return safeApiCall(`${API_BASE_URL}trailer/${type}/${id}`, false);
-};
-
-export const getMovieWatchLink = async (tmdbId) => {
-  return safeApiCall(`${API_BASE_URL}watch/movie/${tmdbId}`, false);
-};
-
-export const getTVShowWatchLink = async (tmdbId, season, episode) => {
-  return safeApiCall(`${API_BASE_URL}watch/tv/${tmdbId}/${season}/${episode}`, false);
-};
-
-export const fetchSeasonEpisodes = async (tvId, seasonNumber) => {
-  return safeApiCall(`${API_BASE_URL}tv/${tvId}/season/${seasonNumber}`, true);
-};
-
-export const fetchWatchlist = async (userId) => {
-  const response = await axios.get(`${API_BASE_URL}/watchlist/${userId}`);
-  return response.data;
-};
-
-export const addToWatchlist = async (userId, movie) => {
-  const response = await axios.post(`${API_BASE_URL}/watchlist/${userId}`, movie);
-  return response.data;
-};
-
-export const removeFromWatchlist = async (userId, movieId) => {
-  await axios.delete(`${API_BASE_URL}/watchlist/${userId}/${movieId}`);
-};
-
-export const fetchHistory = async (userId) => {
-  const response = await axios.get(`${API_BASE_URL}/history/${userId}`);
-  return response.data;
-};
-
-export const addToHistory = async (userId, movie) => {
-  const response = await axios.post(`${API_BASE_URL}/history/${userId}`, movie);
-  return response.data;
-};
 
 export const fetchTrendingMovies = async () => safeApiCall(`${API_BASE_URL}movies/trending`, true);
 export const fetchPopularMovies = async () => safeApiCall(`${API_BASE_URL}movies/popular`, true);
@@ -72,9 +37,29 @@ export const fetchTrendingTVShows = async () => safeApiCall(`${API_BASE_URL}tv/t
 export const fetchPopularTVShows = async () => safeApiCall(`${API_BASE_URL}tv/popular`, true);
 export const fetchTopRatedTVShows = async () => safeApiCall(`${API_BASE_URL}tv/top-rated`, true);
 
-export const fetchTrendingAnime = async () => safeApiCall(`${API_BASE_URL}anime/trending`, true);
+//export const fetchTrendingAnime = async () => safeApiCall(`${API_BASE_URL}anime/trending`, true);
 export const fetchPopularAnime = async () => safeApiCall(`${API_BASE_URL}anime/popular`, true);
 
 export const fetchMovieDetails = async (movieId) => safeApiCall(`${API_BASE_URL}movies/${movieId}`, false);
 export const fetchTVShowDetails = async (tvId) => safeApiCall(`${API_BASE_URL}tv/${tvId}`, false);
 export const fetchAnimeDetails = async (animeId) => safeApiCall(`${API_BASE_URL}anime/${animeId}`, false);
+export const fetchMangaDetails = async (id) => safeApiCall(`${API_BASE_URL}manga/${id}`, false);
+
+export const fetchTrendingAnime = async () => {
+  const response = await axios.get(`${API_BASE_URL}anime/trending`);
+  return response.data?.data?.Page?.media || [];
+};
+
+export const fetchTrendingManga = async () => {
+  const response = await axios.get(`${API_BASE_URL}manga/trending`);
+  return response.data?.data?.Page?.media || [];
+};
+
+export async function fetchWatchlistRecommendations(userId) {
+  const res = await fetch(`http://localhost:8080/api/recommendations/watchlist/${userId}`);
+  if (!res.ok) throw new Error("Failed to fetch recommendations");
+  return res.json();
+}
+
+
+
